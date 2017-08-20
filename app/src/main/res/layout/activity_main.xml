@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <com.caijia.emoticon.widget.EmoticonEditText
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
+
+    <com.caijia.recordaudiobutton.widget.AudioRecordButton
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="音乐"
+        android:onClick="playMusic"/>
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        app:tabMode="fixed"
+        app:tabPaddingStart="20dp"
+        app:tabPaddingEnd="20dp"/>
+
+    <com.caijia.indicator.TabIndicator
+        android:id="@+id/tab_indicator"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        app:ti_select_color="@color/colorPrimary"
+        android:textSize="14sp"
+        app:ti_tab_mode="scroll"
+        app:ti_indicator_mode="wrap"
+        app:ti_tab_padding_horizontal="0dp"
+        app:ti_tab_parent_padding_horizontal="12dp"
+        app:ti_tab_indicator_color="@color/colorPrimary"
+        app:ti_tab_indicator_height="4dp"
+        />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</LinearLayout>
