@@ -1,1 +1,1 @@
-include ':app', ':emoticon', ':recordaudiobutton', ':indicator'
+include ':app', ':emoticon', ':recordaudiobutton', ':indicator', ':simpleitemdecoration'

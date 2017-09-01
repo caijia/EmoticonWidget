@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/emoticon" />
             <option value="$PROJECT_DIR$/indicator" />
             <option value="$PROJECT_DIR$/recordaudiobutton" />
+            <option value="$PROJECT_DIR$/simpleitemdecoration" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

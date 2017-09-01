@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
@@ -44,7 +43,6 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
 
     private ViewPager viewPager;
     private LinearLayout tabContainer;
-    private int customTabId;
     private int currentPosition;
     private float positionOffset;
     private int selectedPosition;
@@ -66,6 +64,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     private LinearLayout.LayoutParams weightTabWidthParams;
     private ViewPager.OnAdapterChangeListener onAdapterChangeListener;
     private PagerAdapterObserver pagerAdapterObserver;
+    private OnTabClickListener tabClickListener;
 
     public TabIndicator(Context context) {
         this(context, null);
@@ -109,7 +108,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         tabContainer.setOrientation(LinearLayout.HORIZONTAL);
         wrapTabWidthParams = new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT);
         weightTabWidthParams = new LinearLayout.LayoutParams(0, MATCH_PARENT, 1f);
-        addView(tabContainer, new HorizontalScrollView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        addView(tabContainer, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
         int dividerColor;
         TypedArray a = null;
@@ -151,6 +150,55 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         indicatorPaint.setColor(tabIndicatorColor);
     }
 
+    public void setup(String[] tabTitles) {
+        setupWithTabAdapter(new DefaultTabAdapter(tabTitles));
+    }
+
+    public void setupWithTabAdapter(final TabAdapter tabAdapter) {
+        populateFromTabAdapter(tabAdapter);
+        //add observer
+        tabAdapter.setDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                populateFromTabAdapter(tabAdapter);
+            }
+        });
+    }
+
+    private void populateFromTabAdapter(TabAdapter tabAdapter) {
+        if (tabAdapter == null) {
+            return;
+        }
+        tabContainer.removeAllViews();
+        int count = tabAdapter.getCount();
+        for (int i = 0; i < count; i++) {
+            LinearLayout tabParent = new LinearLayout(getContext());
+            tabParent.setGravity(Gravity.CENTER);
+            LayoutInflater inflater = LayoutInflater.from(tabParent.getContext());
+            View tabView = tabAdapter.onCreateView(inflater,tabParent, i);
+            tabParent.addView(tabView, wrapTabWidthParams);
+
+            setSystemSelectableItemBackground(tabParent);
+            tabParent.setPadding(tabParentPaddingHorizontal, 0, tabParentPaddingHorizontal, 0);
+            final int finalI = i;
+            tabParent.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    currentPosition = finalI;
+                    selectedPosition = finalI;
+                    invalidate();
+
+                    if (tabClickListener != null) {
+                        tabClickListener.onTabClick(v, selectedPosition);
+                    }
+                }
+            });
+            tabContainer.addView(tabParent, tabMode == MODE_SCROLL
+                    ? wrapTabWidthParams
+                    : weightTabWidthParams);
+        }
+    }
+
     public void setupWithViewPager(ViewPager pager) {
         if (viewPager != null) {
             if (onAdapterChangeListener != null) {
@@ -189,10 +237,6 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
                 sp, getResources().getDisplayMetrics()));
     }
 
-    public void setCustomTab(@LayoutRes int customTabId) {
-        this.customTabId = customTabId;
-    }
-
     private void populateFromPagerAdapter() {
         if (viewPager == null) {
             return;
@@ -207,54 +251,57 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         tabContainer.removeAllViews();
         int count = adapter.getCount();
         for (int i = 0; i < count; i++) {
-            if (customTabId != 0) {
-                View tabView = LayoutInflater.from(getContext())
-                        .inflate(customTabId, tabContainer, false);
-                tabContainer.addView(tabView);
+            LinearLayout tabParent = new LinearLayout(getContext());
+            tabParent.setGravity(Gravity.CENTER);
+            View tabChild;
+
+            if (adapter instanceof CustomTab) {
+                CustomTab factory = (CustomTab) adapter;
+                tabChild = factory.createTab(tabParent, i);
 
             } else {
-                LinearLayout tabParent = new LinearLayout(getContext());
-                tabParent.setGravity(Gravity.CENTER);
-
                 TextView tabView = new TextView(getContext());
+                tabChild = tabView;
                 tabView.setGravity(Gravity.CENTER);
                 tabView.setPadding(tabPaddingHorizontal, 0, tabPaddingHorizontal, 0);
                 tabView.setText(adapter.getPageTitle(i));
-                tabView.setMaxLines(1);
+                tabView.setSingleLine();
                 tabView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
                 tabView.setTextColor(createColorStateList(tabNormalColor, tabSelectColor));
-                tabParent.addView(tabView, WRAP_CONTENT, MATCH_PARENT);
-
-                Drawable tabBackgroundDrawable = tabBackground == 0
-                        ? getSystemSelectableItemBackground()
-                        : AppCompatResources.getDrawable(getContext(), tabBackground);
-                ViewCompat.setBackground(tabView, tabBackgroundDrawable);
-                final int tabIndex = i;
-                tabParent.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        //click tab
-                        if (viewPager != null) {
-                            viewPager.setCurrentItem(tabIndex);
-                        }
-                    }
-                });
-                tabParent.setPadding(tabParentPaddingHorizontal, 0, tabParentPaddingHorizontal, 0);
-                tabContainer.addView(tabParent, tabMode == MODE_FIXED
-                        ? wrapTabWidthParams
-                        : weightTabWidthParams);
             }
+
+            setSystemSelectableItemBackground(tabParent);
+            tabParent.addView(tabChild, WRAP_CONTENT, MATCH_PARENT);
+            final int tabIndex = i;
+            tabParent.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //click tab
+                    if (viewPager != null) {
+                        viewPager.setCurrentItem(tabIndex);
+                    }
+                }
+            });
+            tabParent.setPadding(tabParentPaddingHorizontal, 0, tabParentPaddingHorizontal, 0);
+            tabContainer.addView(tabParent, tabMode == MODE_SCROLL
+                    ? wrapTabWidthParams
+                    : weightTabWidthParams);
         }
     }
 
     private Drawable getSystemSelectableItemBackground() {
         int[] attribute = new int[]{android.R.attr.selectableItemBackground};
-        TypedValue typedValue = new TypedValue();
-        getContext().getTheme()
-                .resolveAttribute(attribute[0], typedValue, true);
-        TypedArray typedArray = getContext().getTheme()
-                .obtainStyledAttributes(typedValue.resourceId, attribute);
-        return typedArray.getDrawable(0);
+        final TypedArray a = getContext().obtainStyledAttributes(attribute);
+        Drawable drawable = a.getDrawable(0);
+        a.recycle();
+        return drawable;
+    }
+
+    private void setSystemSelectableItemBackground(View view) {
+        Drawable tabBackgroundDrawable = tabBackground == 0
+                ? getSystemSelectableItemBackground()
+                : AppCompatResources.getDrawable(getContext(), tabBackground);
+        ViewCompat.setBackground(view, tabBackgroundDrawable);
     }
 
     @Override
@@ -295,8 +342,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (isInEditMode() || viewPager == null || viewPager.getAdapter() == null
-                || viewPager.getAdapter().getCount() == 0) {
+        if (isInEditMode()) {
             return;
         }
         int childCount = tabContainer.getChildCount();
@@ -350,6 +396,42 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
                 indicatorRight, height, indicatorPaint);
     }
 
+    public void setOnTabClickListener(OnTabClickListener tabClickListener) {
+        this.tabClickListener = tabClickListener;
+    }
+
+    public interface OnTabClickListener {
+
+        void onTabClick(View view, int tabIndex);
+    }
+
+    public interface CustomTab {
+
+        View createTab(ViewGroup parent, int position);
+    }
+
+    public static abstract class TabAdapter {
+        DataSetObserver observer;
+
+        public abstract int getCount();
+
+        public abstract View onCreateView(LayoutInflater inflater,ViewGroup parent, int position);
+
+        public void setDataSetObserver(DataSetObserver dataSetObserver) {
+            synchronized (this) {
+                this.observer = dataSetObserver;
+            }
+        }
+
+        public void notifyDataSetChanged() {
+            synchronized (this) {
+                if (observer != null) {
+                    observer.onChanged();
+                }
+            }
+        }
+    }
+
     private class PagerAdapterObserver extends DataSetObserver {
 
         @Override
@@ -372,6 +454,32 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             if (TabIndicator.this.viewPager == viewPager) {
                 populateFromPagerAdapter();
             }
+        }
+    }
+
+    private class DefaultTabAdapter extends TabIndicator.TabAdapter {
+
+        String[] tabTitles;
+
+        public DefaultTabAdapter(String[] tabTitles) {
+            this.tabTitles = tabTitles;
+        }
+
+        @Override
+        public int getCount() {
+            return tabTitles.length;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup parent, int position) {
+            TextView tabView = new TextView(parent.getContext());
+            tabView.setText(tabTitles[position]);
+            tabView.setGravity(Gravity.CENTER);
+            tabView.setPadding(tabPaddingHorizontal, 0, tabPaddingHorizontal, 0);
+            tabView.setSingleLine();
+            tabView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
+            tabView.setTextColor(createColorStateList(tabNormalColor, tabSelectColor));
+            return tabView;
         }
     }
 }
