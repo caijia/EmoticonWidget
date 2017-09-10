@@ -182,7 +182,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
 
     public interface CurrentViewProvider {
 
-        View provideCurrentView();
+        View provideCurrentView(int position);
     }
 
     private View findScrollingView(View view) {
@@ -196,12 +196,12 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 ViewPager pager = (ViewPager) group;
                 PagerAdapter adapter = pager.getAdapter();
                 if (!(adapter instanceof CurrentViewProvider)) {
-                    throw new RuntimeException("PagerAdapter must be "
+                    throw new RuntimeException("PagerAdapter must be implements"
                             + CurrentViewProvider.class.getCanonicalName());
                 }
 
                 CurrentViewProvider provider = (CurrentViewProvider) adapter;
-                View currentView = provider.provideCurrentView();
+                View currentView = provider.provideCurrentView(pager.getCurrentItem());
                 View scrollingView = findScrollingView(currentView);
                 if (scrollingView != null)
                     Log.d(TAG, "scrollingView=" + scrollingView.toString());
@@ -338,11 +338,24 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 //move
                 int dy = (int) (y - lastTouchY);
                 Log.d(TAG, "move dy = " + dy);
-                int overflowDis = translateChild(dy);
 
-                if (overflowDis != 0 && dy < 0) {
+                //上滑
+                if (dy < 0) {
                     //上滑动,可伸缩的距离已经滑完,这时滑动dy不进行平移,而是滑动currScrollingView
-                    currScrollingView.scrollBy(0, -overflowDis);
+                    int overflowDis = translateChild(dy);
+                    if (overflowDis != 0) {
+                        handleCurrentScrollingView(-overflowDis);
+                    }
+
+                }else{
+                    boolean isTop = scrollingViewIsTop();
+                    if (isTop) {
+                        translateChild(dy);
+
+                    }else{
+                        //将currScrollingView滑动到顶部,然后再平移头部
+                        handleCurrentScrollingView(-dy);
+                    }
                 }
 
                 lastTouchX = x;
@@ -364,7 +377,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 computeVelocity();
                 int velocityY = (int) velocityTracker.getYVelocity(activePointerId);
                 //fling
-                Log.d(TAG, "touch velocityY = " + velocityY);
+                Log.d(TAG, "touch fling velocityY = " + velocityY);
 
                 if (velocityIsValid(velocityY)) {
                     fling(-velocityY);
@@ -375,6 +388,10 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
             }
         }
         return true;
+    }
+
+    private void handleCurrentScrollingView(int dy) {
+        currScrollingView.scrollBy(0, dy);
     }
 
     private boolean velocityIsValid(int velocity) {
