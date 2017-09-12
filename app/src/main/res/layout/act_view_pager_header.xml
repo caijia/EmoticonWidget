@@ -1,32 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.caijia.emoticon.widget.ViewPagerHeaderLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.caijia.viewpagerheaderlayout.ViewPagerHeaderLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/view_pager_header_layout"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:headVisibleMinHeight="40dp"
     android:orientation="vertical">
 
-    <LinearLayout
+    <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/example"
+        app:isFlexibleLayout="true"
+        app:flexibleRatio="0.5"/>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="@color/colorAccent"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:isGradientLayout="true"
+        app:gradientColor="@color/colorAccent"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:orientation="vertical"
+        app:isHeaderLayout="true">
 
         <com.caijia.indicator.TabIndicator
             android:id="@+id/tab_indicator"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="#999999"
+            android:layout_gravity="bottom"
             app:ti_tab_padding_horizontal="20dp"/>
 
-    </LinearLayout>
+    </FrameLayout>
 
     <android.support.v4.view.ViewPager
+        app:isScrollingLayout="true"
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-</com.caijia.emoticon.widget.ViewPagerHeaderLayout>
+</com.caijia.viewpagerheaderlayout.ViewPagerHeaderLayout>

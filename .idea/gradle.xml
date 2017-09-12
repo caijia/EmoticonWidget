@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/indicator" />
             <option value="$PROJECT_DIR$/recordaudiobutton" />
             <option value="$PROJECT_DIR$/simpleitemdecoration" />
+            <option value="$PROJECT_DIR$/viewpagerheaderlayout" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

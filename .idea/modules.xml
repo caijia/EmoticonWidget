@@ -8,7 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/indicator/indicator.iml" filepath="$PROJECT_DIR$/indicator/indicator.iml" />
       <module fileurl="file://$PROJECT_DIR$/recordaudiobutton/recordaudiobutton.iml" filepath="$PROJECT_DIR$/recordaudiobutton/recordaudiobutton.iml" />
       <module fileurl="file://$PROJECT_DIR$/simpleitemdecoration/simpleitemdecoration.iml" filepath="$PROJECT_DIR$/simpleitemdecoration/simpleitemdecoration.iml" />
-      <module fileurl="file://$PROJECT_DIR$/simpleitemdecoration/simpleitemdecoration.iml" filepath="$PROJECT_DIR$/simpleitemdecoration/simpleitemdecoration.iml" />
+      <module fileurl="file://$PROJECT_DIR$/viewpagerheaderlayout/viewpagerheaderlayout.iml" filepath="$PROJECT_DIR$/viewpagerheaderlayout/viewpagerheaderlayout.iml" />
     </modules>
   </component>
 </project>
