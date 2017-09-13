@@ -32,7 +32,6 @@ import android.support.v4.view.ScrollingView;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.NestedScrollView;
-import android.support.v4.widget.ScrollerCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -45,7 +44,9 @@ import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.OverScroller;
 import android.widget.ScrollView;
+import android.widget.Scroller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +78,11 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
     private VelocityTracker velocityTracker;
     private int maxFlexibleHeight;
     private int touchSlop;
-    private ScrollerCompat mScroller;
+
+    /**
+     * 这里如果用{@link android.widget.OverScroller 在有些手机上} {@link OverScroller#getCurrVelocity()} 为0
+     */
+    private Scroller mScroller;
     private FlingRunnable flingRunnable;
     private View currScrollingView;
     private OffsetChangeListener headerViewScrollListener;
@@ -128,7 +133,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
         maxFlingVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
 
         nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
-        mScroller = ScrollerCompat.create(context);
+        mScroller = new Scroller(context);
         flingRunnable = new FlingRunnable();
         flingScrollingViewRunnable = new FlingScrollingViewRunnable();
 
@@ -867,6 +872,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                         if (toTop) {
                             reset();
                             int currVelocity = Math.round(mScroller.getCurrVelocity());
+                            log("to top currVelocity = " + currVelocity);
                             mScroller.abortAnimation();
                             flingTarget(currVelocity);
 

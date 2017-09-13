@@ -33,6 +33,7 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         tabIndicator = (TabIndicator) findViewById(R.id.tab_indicator);
         viewPagerHeaderLayout = (ViewPagerHeaderLayout) findViewById(R.id.view_pager_header_layout);
+        viewPagerHeaderLayout.setDebug(true);
 
         fragments = new ArrayList<>();
         for (int i = 0; i < 8; i++) {

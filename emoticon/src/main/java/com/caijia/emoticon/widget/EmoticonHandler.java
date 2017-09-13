@@ -38,7 +38,7 @@ public class EmoticonHandler implements TextWatcher {
      *
      * @param s     表示之前的文本内容
      * @param start 添加时 ->  光标开始的位置,删除时为光标结束位置
-     * @param count 删除时 ->  添加的字符个数,添加时为0
+     * @param count 删除时 ->  删除的字符个数,添加时为0
      * @param after 添加时 ->  添加的字符个数,删除时为0
      */
     @Override
