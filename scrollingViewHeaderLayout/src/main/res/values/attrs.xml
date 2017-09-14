@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="ViewPagerHeaderLayout">
+    <declare-styleable name="ScrollingViewHeaderLayout">
         <attr name="headVisibleMinHeight" format="dimension" />
         <attr name="isSeriesScroll" format="boolean"/>
         <attr name="headScrollMode">

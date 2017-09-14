@@ -1,4 +1,4 @@
-package com.caijia.viewpagerheaderlayout;
+package com.caijia.widget;
 
 import org.junit.Test;
 

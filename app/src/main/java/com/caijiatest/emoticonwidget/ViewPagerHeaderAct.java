@@ -10,7 +10,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.caijia.indicator.TabIndicator;
-import com.caijia.viewpagerheaderlayout.ViewPagerHeaderLayout;
+import com.caijia.widget.ScrollingViewHeaderLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.List;
 
 public class ViewPagerHeaderAct extends AppCompatActivity {
 
-    private ViewPagerHeaderLayout viewPagerHeaderLayout;
+    private ScrollingViewHeaderLayout scrollingViewHeaderLayout;
     private ViewPager viewPager;
     private TabIndicator tabIndicator;
     private List<Fragment> fragments;
@@ -32,8 +32,8 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
         setContentView(R.layout.act_view_pager_header);
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         tabIndicator = (TabIndicator) findViewById(R.id.tab_indicator);
-        viewPagerHeaderLayout = (ViewPagerHeaderLayout) findViewById(R.id.view_pager_header_layout);
-        viewPagerHeaderLayout.setDebug(true);
+        scrollingViewHeaderLayout = (ScrollingViewHeaderLayout) findViewById(R.id.view_pager_header_layout);
+        scrollingViewHeaderLayout.setDebug(true);
 
         fragments = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
@@ -42,7 +42,7 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
 
         viewPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
         tabIndicator.setupWithViewPager(viewPager);
-        viewPagerHeaderLayout.setOnHeaderViewScrollListener(new ViewPagerHeaderLayout.OffsetChangeListener() {
+        scrollingViewHeaderLayout.setOnHeaderViewScrollListener(new ScrollingViewHeaderLayout.OffsetChangeListener() {
             @Override
             public void onOffsetChanged(int scrollDis, int maxScrollDis) {
                 Log.d("view_pager", "scrollDis = " + scrollDis + "---maxScrollDis = " + maxScrollDis);
@@ -50,7 +50,7 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
         });
     }
 
-    private class MyPagerAdapter extends CacheFagmentAdapter implements ViewPagerHeaderLayout.CurrentViewProvider{
+    private class MyPagerAdapter extends CacheFagmentAdapter implements ScrollingViewHeaderLayout.CurrentViewProvider{
 
         public MyPagerAdapter(FragmentManager fm) {
             super(fm);

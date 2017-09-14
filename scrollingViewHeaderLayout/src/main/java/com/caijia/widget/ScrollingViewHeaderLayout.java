@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.caijia.viewpagerheaderlayout;
+package com.caijia.widget;
 
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
@@ -57,7 +57,7 @@ import static android.support.v4.widget.ViewDragHelper.INVALID_POINTER;
  * Created by cai.jia on 2017/9/6 0006.
  */
 
-public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollingParent {
+public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScrollingParent {
 
     private static final String TAG = "viewPager_header_layout";
     private static final int SCROLL_MODE_SNAP = 1;
@@ -90,25 +90,24 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
     private boolean isDebug;
     private List<FlexibleViewWrapper> flexibleViews;
     private List<GradientViewWrapper> gradientViews;
-    private FlingScrollingViewRunnable flingScrollingViewRunnable;
     private ValueAnimator animator;
     private boolean isSeriesScroll;
 
-    public ViewPagerHeaderLayout(Context context) {
+    public ScrollingViewHeaderLayout(Context context) {
         this(context, null);
     }
 
-    public ViewPagerHeaderLayout(Context context, AttributeSet attrs) {
+    public ScrollingViewHeaderLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public ViewPagerHeaderLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ScrollingViewHeaderLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ViewPagerHeaderLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public ScrollingViewHeaderLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(context, attrs);
     }
@@ -116,10 +115,10 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
     private void init(Context context, AttributeSet attrs) {
         TypedArray a = null;
         try {
-            a = context.obtainStyledAttributes(attrs, R.styleable.ViewPagerHeaderLayout);
-            headVisibleMinHeight = a.getDimensionPixelOffset(R.styleable.ViewPagerHeaderLayout_headVisibleMinHeight, 0);
-            scrollMode = a.getInt(R.styleable.ViewPagerHeaderLayout_headScrollMode, SCROLL_MODE_NORMAL);
-            isSeriesScroll = a.getBoolean(R.styleable.ViewPagerHeaderLayout_isSeriesScroll, false);
+            a = context.obtainStyledAttributes(attrs, R.styleable.ScrollingViewHeaderLayout);
+            headVisibleMinHeight = a.getDimensionPixelOffset(R.styleable.ScrollingViewHeaderLayout_headVisibleMinHeight, 0);
+            scrollMode = a.getInt(R.styleable.ScrollingViewHeaderLayout_headScrollMode, SCROLL_MODE_NORMAL);
+            isSeriesScroll = a.getBoolean(R.styleable.ScrollingViewHeaderLayout_isSeriesScroll, false);
 
         } finally {
             if (a != null) {
@@ -135,7 +134,6 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
         nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
         mScroller = new Scroller(context);
         flingRunnable = new FlingRunnable();
-        flingScrollingViewRunnable = new FlingScrollingViewRunnable();
 
         flexibleViews = new ArrayList<>();
         gradientViews = new ArrayList<>();
@@ -189,6 +187,17 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
 
         if (headerView == null || scrollingViewParent == null) {
             throw new RuntimeException("please set header layout and scrolling layout");
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (scrollingViewParent != null && headVisibleMinHeight > 0) {
+            scrollingViewParent.measure(widthMeasureSpec,
+                    MeasureSpec.makeMeasureSpec(
+                            scrollingViewParent.getMeasuredHeight() - headVisibleMinHeight,
+                            MeasureSpec.EXACTLY));
         }
     }
 
@@ -454,7 +463,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 computeVelocity();
                 int velocityY = (int) velocityTracker.getYVelocity(activePointerId);
                 //fling
-                log("touch fling velocityY = " + velocityY);
+                log("touch fling velocityY = " + -velocityY);
 
                 if (velocityIsValid(velocityY)) {
                     fling(-velocityY);
@@ -514,6 +523,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 translateChild(-consumed[1]);
 
             } else if (dy < 0 && remainingFlexibleHeight < maxFlexibleHeight) {
+                log("pre scroll down");
                 if (dy > maxFlexibleHeight - remainingFlexibleHeight) {
                     consumed[1] = maxFlexibleHeight - remainingFlexibleHeight;
 
@@ -543,13 +553,14 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
             overflowDis = scrollDistance + maxFlexibleHeight;
             scrollDistance = -maxFlexibleHeight;
         }
-        handleFlexibleView(scrollDistance);
-        handleGradientView(scrollDistance, maxFlexibleHeight);
+
         headerView.setTranslationY(scrollDistance);
         scrollingViewParent.setTranslationY(scrollDistance);
         if (headerViewScrollListener != null) {
             headerViewScrollListener.onOffsetChanged(Math.abs(scrollDistance), maxFlexibleHeight);
         }
+        handleFlexibleView(scrollDistance);
+        handleGradientView(scrollDistance, maxFlexibleHeight);
         return overflowDis;
     }
 
@@ -562,8 +573,9 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
             View gradientView = wrapper.gradientView;
             int color = wrapper.gradientColor;
             gradientView.setBackgroundColor(color);
-            gradientView.setAlpha(Math.abs(scrollDistance) * 1f / maxFlexibleHeight);
+            float alpha = (float)Math.abs(scrollDistance) / maxFlexibleHeight;
             gradientView.setTranslationY(scrollDistance);
+            gradientView.setAlpha(alpha);
         }
     }
 
@@ -586,11 +598,37 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
 
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        //手动滑动 currentScrollView 到top ,然后手动滑动头部。
-        if (isSeriesScroll) {
+        //向下滑时，currentScrollView 到top ,然后手动滑动头部。
+        if (isSeriesScroll && velocityY < 0) {
+            log("onNestedPreFling velocityY = " + velocityY);
             flingScrollingViewToTop((int) velocityY);
         }
         return super.onNestedPreFling(target, velocityX, velocityY);
+    }
+
+    private int previousY;
+
+    @Override
+    public void computeScroll() {
+        super.computeScroll();
+        if (mScroller != null && mScroller.computeScrollOffset()) {
+            int currY = mScroller.getCurrY();
+            int dy = currY - previousY;
+            if (scrollingViewIsTop()) {
+                log("computeScroll dy = " + dy);
+                translateChild(-dy);
+            }
+            previousY = currY;
+            if (scrollDistance < 0) {
+                ViewCompat.postInvalidateOnAnimation(this);
+
+            }else{
+                mScroller.abortAnimation();
+            }
+
+        }else{
+            previousY = 0;
+        }
     }
 
     private void fling(int velocityY) {
@@ -626,7 +664,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                 0, 0, // x
                 Integer.MIN_VALUE, Integer.MAX_VALUE); //y
         if (mScroller.computeScrollOffset()) {
-            ViewCompat.postOnAnimation(this, flingScrollingViewRunnable);
+            ViewCompat.postInvalidateOnAnimation(this);
         }
     }
 
@@ -827,22 +865,6 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
         }
     }
 
-    private class FlingScrollingViewRunnable implements Runnable {
-
-        @Override
-        public void run() {
-            if (mScroller.computeScrollOffset()) {
-                if (scrollingViewIsTop()) {
-                    mScroller.abortAnimation();
-                    fling(-Math.round(mScroller.getCurrVelocity()));
-
-                } else {
-                    ViewCompat.postOnAnimation(ViewPagerHeaderLayout.this, this);
-                }
-            }
-        }
-    }
-
     private class FlingRunnable implements Runnable {
 
         static final int DOWN = 1;
@@ -862,22 +884,23 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
         @Override
         public void run() {
             if (mScroller.computeScrollOffset()) {
-                int dy = oldCurrY - mScroller.getCurrY();
-                log("fling dy=" + dy);
+                int currY = mScroller.getCurrY();
+                log("currY = " + currY);
+                int dy = oldCurrY - currY;
                 translateChild(dy);
-                oldCurrY = mScroller.getCurrY();
+                oldCurrY = currY;
                 switch (direction) {
                     case UP: {
                         boolean toTop = scrollDistance <= -maxFlexibleHeight;
                         if (toTop) {
                             reset();
-                            int currVelocity = Math.round(mScroller.getCurrVelocity());
-                            log("to top currVelocity = " + currVelocity);
+                            int currVelocity = (int) mScroller.getCurrVelocity();
+                            log("fling up currVelocity " + currVelocity);
                             mScroller.abortAnimation();
                             flingTarget(currVelocity);
 
                         } else {
-                            ViewCompat.postOnAnimation(ViewPagerHeaderLayout.this, this);
+                            ViewCompat.postOnAnimation(ScrollingViewHeaderLayout.this, this);
                         }
                         break;
                     }
@@ -889,7 +912,7 @@ public class ViewPagerHeaderLayout extends FrameLayout implements NestedScrollin
                             mScroller.abortAnimation();
 
                         } else {
-                            ViewCompat.postOnAnimation(ViewPagerHeaderLayout.this, this);
+                            ViewCompat.postOnAnimation(ScrollingViewHeaderLayout.this, this);
                         }
                         break;
                     }

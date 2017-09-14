@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.caijia.viewpagerheaderlayout.ViewPagerHeaderLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.caijia.widget.ScrollingViewHeaderLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/view_pager_header_layout"
@@ -10,7 +10,7 @@
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="240dp"
         android:scaleType="centerCrop"
         android:src="@drawable/example"
         app:isFlexibleLayout="true"
@@ -18,13 +18,12 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        app:isGradientLayout="true"
+        android:layout_height="240dp"
         app:gradientColor="@color/colorAccent"/>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="240dp"
         android:orientation="vertical"
         app:isHeaderLayout="true">
 
@@ -43,4 +42,4 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-</com.caijia.viewpagerheaderlayout.ViewPagerHeaderLayout>
+</com.caijia.widget.ScrollingViewHeaderLayout>
