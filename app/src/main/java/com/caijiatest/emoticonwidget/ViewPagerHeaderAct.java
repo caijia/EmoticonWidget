@@ -37,7 +37,13 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
 
         fragments = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            fragments.add(new TestFragment());
+            if (i == 1) {
+                fragments.add(new TestRecyclerFragment());
+            }else if (i==2){
+                fragments.add(new TestFragment1());
+            }else{
+                fragments.add(new TestFragment());
+            }
         }
 
         viewPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));

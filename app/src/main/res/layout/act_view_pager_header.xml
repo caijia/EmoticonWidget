@@ -39,6 +39,7 @@
     <android.support.v4.view.ViewPager
         app:isScrollingLayout="true"
         android:id="@+id/view_pager"
+        android:background="@android:color/white"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
