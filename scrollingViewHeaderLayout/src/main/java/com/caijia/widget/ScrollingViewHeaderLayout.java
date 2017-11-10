@@ -434,12 +434,12 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
                     }
 
                 } else {
+                    //将currScrollingView滑动到顶部,然后再平移头部
                     boolean isTop = scrollingViewIsTop();
                     if (isTop) {
                         translateChild(dy);
 
                     } else {
-                        //将currScrollingView滑动到顶部,然后再平移头部
                         handleCurrentScrollingView(-dy);
                     }
                 }

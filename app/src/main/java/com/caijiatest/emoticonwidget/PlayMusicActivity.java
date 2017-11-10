@@ -3,10 +3,8 @@ package com.caijiatest.emoticonwidget;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
-import com.caijiatest.emoticonwidget.music.adapter.LyricsAdapter;
 import com.caijiatest.emoticonwidget.music.lyrics.LyricView;
 import com.caijiatest.emoticonwidget.music.lyrics.LyricsParser;
 import com.caijiatest.emoticonwidget.music.lyrics.RowLyric;
@@ -35,9 +33,9 @@ public class PlayMusicActivity extends AppCompatActivity {
             InputStream lyricStream = getAssets().open("test.lrc");
             List<RowLyric> lyricList = lyricsParser.parser(lyricStream);
             lyricView.setLyric(lyricList);
-            LyricsAdapter adapter = new LyricsAdapter(lyricList);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.setAdapter(adapter);
+//            LyricsAdapter adapter = new LyricsAdapter(lyricList);
+//            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+//            recyclerView.setAdapter(adapter);
 
         } catch (IOException e) {
             e.printStackTrace();
