@@ -10,7 +10,7 @@
         </attr>
     </declare-styleable>
 
-    <declare-styleable name="ViewPagerHeaderLayout_Layout">
+    <declare-styleable name="ScrollingViewHeaderLayout_Layout">
         <attr name="isHeaderLayout" format="boolean"/>
         <attr name="isScrollingLayout" format="boolean"/>
         <attr name="isFlexibleLayout" format="boolean"/>

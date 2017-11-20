@@ -212,12 +212,6 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
                 getPaddingTop() + headerViewHeight + scrollingViewParent.getMeasuredHeight());
     }
 
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        maxFlexibleHeight = headerView.getMeasuredHeight() - headVisibleMinHeight;
-    }
-
     private void onMoveDown(MotionEvent ev) {
         initialMotionY = lastTouchY = ev.getY(0);
         initialMotionX = lastTouchX = ev.getX(0);
@@ -328,6 +322,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             case MotionEvent.ACTION_DOWN: {
                 onMoveDown(ev);
                 currScrollingView = getCurrentScrollView();
+                maxFlexibleHeight = headerView.getMeasuredHeight() - headVisibleMinHeight;
                 break;
             }
 
@@ -380,7 +375,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         if (!isBeginDragged && yDis > touchSlop) {
             boolean isTop = scrollingViewIsTop();
             int remainingFlexibleHeight = getRemainingFlexibleHeight();
-            if (remainingFlexibleHeight != 0 || (isTop && dy > 0)) {
+            if ((remainingFlexibleHeight != 0 && dy < 0) || (isTop && dy > 0)) {
                 isBeginDragged = true;
             }
             log("isBeginDragged = " + isBeginDragged);
@@ -403,6 +398,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             case MotionEvent.ACTION_DOWN: {
                 onMoveDown(ev);
                 currScrollingView = getCurrentScrollView();
+                maxFlexibleHeight = headerView.getMeasuredHeight() - headVisibleMinHeight;
                 break;
             }
 
@@ -827,13 +823,13 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             super(c, attrs);
             TypedArray a = null;
             try {
-                a = c.obtainStyledAttributes(attrs, R.styleable.ViewPagerHeaderLayout_Layout);
-                isHeaderLayout = a.getBoolean(R.styleable.ViewPagerHeaderLayout_Layout_isHeaderLayout, false);
-                isScrollingLayout = a.getBoolean(R.styleable.ViewPagerHeaderLayout_Layout_isScrollingLayout, false);
-                isFlexibleLayout = a.getBoolean(R.styleable.ViewPagerHeaderLayout_Layout_isFlexibleLayout, false);
-                flexibleRatio = a.getFloat(R.styleable.ViewPagerHeaderLayout_Layout_flexibleRatio, 0.5f);
-                isGradientLayout = a.getBoolean(R.styleable.ViewPagerHeaderLayout_Layout_isGradientLayout, false);
-                gradientColor = a.getColor(R.styleable.ViewPagerHeaderLayout_Layout_gradientColor, Color.BLUE);
+                a = c.obtainStyledAttributes(attrs, R.styleable.ScrollingViewHeaderLayout_Layout);
+                isHeaderLayout = a.getBoolean(R.styleable.ScrollingViewHeaderLayout_Layout_isHeaderLayout, false);
+                isScrollingLayout = a.getBoolean(R.styleable.ScrollingViewHeaderLayout_Layout_isScrollingLayout, false);
+                isFlexibleLayout = a.getBoolean(R.styleable.ScrollingViewHeaderLayout_Layout_isFlexibleLayout, false);
+                flexibleRatio = a.getFloat(R.styleable.ScrollingViewHeaderLayout_Layout_flexibleRatio, 0.5f);
+                isGradientLayout = a.getBoolean(R.styleable.ScrollingViewHeaderLayout_Layout_isGradientLayout, false);
+                gradientColor = a.getColor(R.styleable.ScrollingViewHeaderLayout_Layout_gradientColor, Color.BLUE);
 
             } finally {
                 if (a != null) {
