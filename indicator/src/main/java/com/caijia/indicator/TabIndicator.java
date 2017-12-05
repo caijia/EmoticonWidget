@@ -441,7 +441,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
 
         if (customIndicator != null) {
             customIndicator.drawIndicator(canvas, indicatorPaint, selectView, nextView,
-                    selectTabView, nextTabView);
+                    selectTabView, nextTabView,currentPosition,positionOffset);
 
         } else {
             canvas.drawRect(indicatorLeft, height - tabIndicatorHeight,
@@ -467,7 +467,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
 
         void drawIndicator(@NonNull Canvas canvas, @NonNull Paint paint, @Nullable View selectView,
                            @Nullable View nextView, @Nullable View selectChildView,
-                           @Nullable View nextChildView);
+                           @Nullable View nextChildView,int position,float positionOffset);
     }
 
     public static abstract class TabAdapter {
