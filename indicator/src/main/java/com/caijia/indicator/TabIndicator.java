@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2017 caijia.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.caijia.indicator;
 
 import android.annotation.TargetApi;
@@ -12,6 +27,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.math.MathUtils;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
@@ -54,10 +70,11 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     private int tabBackground;
     private int tabSelectColor;
     private int tabNormalColor;
-    private int tabIndicatorColor;
-    private float tabIndicatorHeight;
+    private int tabIndicatorWidth;
+    private int tabIndicatorHeight;
     private int tabPaddingHorizontal;
     private int tabParentPaddingHorizontal;
+    private int tabCustomIndicatorId;
     private Paint dividerPaint;
     private Paint indicatorPaint;
     private LinearLayout.LayoutParams wrapTabWidthParams;
@@ -65,6 +82,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     private ViewPager.OnAdapterChangeListener onAdapterChangeListener;
     private PagerAdapterObserver pagerAdapterObserver;
     private OnTabClickListener tabClickListener;
+    private CustomIndicator customIndicator;
 
     public TabIndicator(Context context) {
         this(context, null);
@@ -111,6 +129,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         addView(tabContainer, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
         int dividerColor;
+        int tabIndicatorColor;
         TypedArray a = null;
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.TabIndicator);
@@ -128,10 +147,14 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             tabNormalColor = a.getColor(R.styleable.TabIndicator_ti_normal_color, Color.BLACK);
             tabIndicatorColor = a.getColor(R.styleable.TabIndicator_ti_tab_indicator_color,
                     Color.RED);
+            tabIndicatorWidth = a.getDimensionPixelOffset(
+                    R.styleable.TabIndicator_ti_tab_indicator_width, 0);
             tabIndicatorHeight = a.getDimensionPixelOffset(
                     R.styleable.TabIndicator_ti_tab_indicator_height, dpToPx(2));
             tabPaddingHorizontal = a.getDimensionPixelOffset(
                     R.styleable.TabIndicator_ti_tab_padding_horizontal, 0);
+            tabCustomIndicatorId = a.getResourceId(R.styleable.TabIndicator_ti_custom_indicator_id,
+                    -1);
             tabParentPaddingHorizontal = a.getDimensionPixelOffset(
                     R.styleable.TabIndicator_ti_tab_parent_padding_horizontal, 0);
             tabParentPaddingHorizontal = tabMode == MODE_FIXED ? 0 : tabParentPaddingHorizontal;
@@ -148,6 +171,18 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         indicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         indicatorPaint.setAntiAlias(true);
         indicatorPaint.setColor(tabIndicatorColor);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        if (tabCustomIndicatorId != -1) {
+            View customIndicatorView = LayoutInflater.from(getContext())
+                    .inflate(tabCustomIndicatorId, this, false);
+
+            if (customIndicatorView != null && customIndicatorView instanceof CustomIndicator)
+                customIndicator = (CustomIndicator) customIndicatorView;
+        }
     }
 
     public void setup(String[] tabTitles) {
@@ -175,7 +210,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             LinearLayout tabParent = new LinearLayout(getContext());
             tabParent.setGravity(Gravity.CENTER);
             LayoutInflater inflater = LayoutInflater.from(tabParent.getContext());
-            View tabView = tabAdapter.onCreateView(inflater,tabParent, i);
+            View tabView = tabAdapter.onCreateView(inflater, tabParent, i);
             tabParent.addView(tabView, wrapTabWidthParams);
 
             setSystemSelectableItemBackground(tabParent);
@@ -184,8 +219,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             tabParent.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    currentPosition = finalI;
-                    selectedPosition = finalI;
+                    selectedPosition = currentPosition = finalI;
                     invalidate();
 
                     if (tabClickListener != null) {
@@ -214,8 +248,10 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         }
 
         viewPager = pager;
-
         PagerAdapter pagerAdapter = pager.getAdapter();
+        if (pagerAdapter == null) {
+            throw new RuntimeException("ViewPager Adapter is null");
+        }
         viewPager.addOnPageChangeListener(this);
 
         onAdapterChangeListener = new AdapterChangeListener();
@@ -328,7 +364,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             final View nextChild = position + 1 < tabContainer.getChildCount()
                     ? tabContainer.getChildAt(position + 1)
                     : null;
-            final int selectedWidth = selectedChild != null ? selectedChild.getWidth() : 0;
+            final int selectedWidth = selectedChild.getWidth();
             final int nextWidth = nextChild != null ? nextChild.getWidth() : 0;
 
             return selectedChild.getLeft()
@@ -373,6 +409,9 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         View selectTabView = selectView != null ? ((ViewGroup) selectView).getChildAt(0) : null;
         View nextTabView = nextView != null ? ((ViewGroup) nextView).getChildAt(0) : null;
 
+        int selectViewWidth = selectView != null ? selectView.getWidth() : 0;
+        int nextViewWidth = nextView != null ? nextView.getWidth() : 0;
+
         int selectViewLeft = selectView == null ? 0 : selectView.getLeft();
         int selectViewRight = selectView == null ? 0 : selectView.getRight();
         int selectTabLeft = selectTabView == null ? 0 : selectTabView.getLeft();
@@ -381,19 +420,33 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         int nextViewRight = nextView == null ? 0 : nextView.getRight();
         int nextTabLeft = nextTabView == null ? 0 : nextTabView.getLeft();
 
-        if (indicatorMode == INDICATOR_FILL) {
-            selectTabLeft = 0;
-            nextTabLeft = 0;
+        if (tabIndicatorWidth != 0) {
+            selectTabLeft = MathUtils.clamp((selectViewWidth - tabIndicatorWidth) / 2,
+                    0, selectViewWidth);
+            nextTabLeft = MathUtils.clamp((nextViewWidth - tabIndicatorWidth) / 2,
+                    0, nextViewWidth);
+
+        } else {
+            if (indicatorMode == INDICATOR_FILL) {
+                selectTabLeft = 0;
+                nextTabLeft = 0;
+            }
         }
 
         int indicatorLeft = (int) ((selectViewLeft + selectTabLeft) * (1 - positionOffset)
                 + (nextViewLeft + nextTabLeft) * positionOffset);
         int indicatorRight = (int) ((selectViewRight - selectTabLeft) * (1 - positionOffset)
                 + (nextViewRight - nextTabLeft) * positionOffset);
-
         int height = getHeight();
-        canvas.drawRect(indicatorLeft, height - tabIndicatorHeight,
-                indicatorRight, height, indicatorPaint);
+
+        if (customIndicator != null) {
+            customIndicator.drawIndicator(canvas, indicatorPaint, selectView, nextView,
+                    selectTabView, nextTabView);
+
+        } else {
+            canvas.drawRect(indicatorLeft, height - tabIndicatorHeight,
+                    indicatorRight, height, indicatorPaint);
+        }
     }
 
     public void setOnTabClickListener(OnTabClickListener tabClickListener) {
@@ -410,12 +463,19 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         View createTab(ViewGroup parent, int position);
     }
 
+    public interface CustomIndicator {
+
+        void drawIndicator(@NonNull Canvas canvas, @NonNull Paint paint, @Nullable View selectView,
+                           @Nullable View nextView, @Nullable View selectChildView,
+                           @Nullable View nextChildView);
+    }
+
     public static abstract class TabAdapter {
         DataSetObserver observer;
 
         public abstract int getCount();
 
-        public abstract View onCreateView(LayoutInflater inflater,ViewGroup parent, int position);
+        public abstract View onCreateView(LayoutInflater inflater, ViewGroup parent, int position);
 
         public void setDataSetObserver(DataSetObserver dataSetObserver) {
             synchronized (this) {

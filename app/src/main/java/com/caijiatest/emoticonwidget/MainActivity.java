@@ -27,27 +27,17 @@ public class MainActivity extends AppCompatActivity implements TabIndicator.OnTa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tabIndicator = (TabIndicator) findViewById(R.id.tab_indicator);
-        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        tabIndicator = findViewById(R.id.tab_indicator);
+        viewPager = findViewById(R.id.view_pager);
         pagerAdapter = new TestPagerAdapter();
         viewPager.setAdapter(pagerAdapter);
-//        tabIndicator.setupWithViewPager(viewPager);
+        tabIndicator.setupWithViewPager(viewPager);
 
-        defaultTabAdapter = new DefaultTabAdapter();
-        tabIndicator.setupWithTabAdapter(defaultTabAdapter);
-        tabIndicator.setOnTabClickListener(this);
+//        defaultTabAdapter = new DefaultTabAdapter();
+//        tabIndicator.setupWithTabAdapter(defaultTabAdapter);
+//        tabIndicator.setOnTabClickListener(this);
 
-        tabIndicator.setup(new String[]{"ITEM1","ITEM2","ITEM3","ITEM4","ITEM5"});
-    }
-
-    public void playMusic(View view) {
-//        Intent i = new Intent(this, PlayMusicActivity.class);
-//        startActivity(i);
-
-        pagerAdapter.notifyDataSetChanged();
-
-        defaultTabAdapter.addTab();
-        defaultTabAdapter.notifyDataSetChanged();
+//        tabIndicator.setup(new String[]{"ITEM1","ITEM2","ITEM3","ITEM4","ITEM5"});
     }
 
     @Override
@@ -112,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements TabIndicator.OnTa
         @Override
         public View onCreateView(LayoutInflater inflater,ViewGroup parent, int position) {
             View view = inflater.inflate(R.layout.item_custom_tab, parent,false);
-            TextView tabView = (TextView) view.findViewById(R.id.tv_text);
+            TextView tabView =view.findViewById(R.id.tv_text);
             tabView.setText("item=" + position);
             return view;
         }
