@@ -316,6 +316,10 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
                     if (viewPager != null) {
                         viewPager.setCurrentItem(tabIndex);
                     }
+
+                    if (tabClickListener != null) {
+                        tabClickListener.onTabClick(v, selectedPosition);
+                    }
                 }
             });
             tabParent.setPadding(tabParentPaddingHorizontal, 0, tabParentPaddingHorizontal, 0);
@@ -541,5 +545,125 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             tabView.setTextColor(createColorStateList(tabNormalColor, tabSelectColor));
             return tabView;
         }
+    }
+
+    public LinearLayout getTabContainer() {
+        return tabContainer;
+    }
+
+    public int getSelectedPosition() {
+        return selectedPosition;
+    }
+
+    public void setSelectedPosition(int selectedPosition) {
+        this.selectedPosition = selectedPosition;
+    }
+
+    public int getDividerWidth() {
+        return dividerWidth;
+    }
+
+    public void setDividerWidth(int dividerWidth) {
+        this.dividerWidth = dividerWidth;
+        invalidate();
+    }
+
+    public int getDividerPadding() {
+        return dividerPadding;
+    }
+
+    public void setDividerPadding(int dividerPadding) {
+        this.dividerPadding = dividerPadding;
+        invalidate();
+    }
+
+    public int getTabMode() {
+        return tabMode;
+    }
+
+    public void setTabMode(int tabMode) {
+        this.tabMode = tabMode;
+        invalidate();
+    }
+
+    public int getIndicatorMode() {
+        return indicatorMode;
+    }
+
+    public void setIndicatorMode(int indicatorMode) {
+        this.indicatorMode = indicatorMode;
+        invalidate();
+    }
+
+    public int getTabTextSize() {
+        return tabTextSize;
+    }
+
+    public void setTabTextSize(int tabTextSize) {
+        this.tabTextSize = tabTextSize;
+        invalidate();
+    }
+
+    public int getTabBackground() {
+        return tabBackground;
+    }
+
+    public void setTabBackground(int tabBackground) {
+        this.tabBackground = tabBackground;
+        invalidate();
+    }
+
+    public int getTabSelectColor() {
+        return tabSelectColor;
+    }
+
+    public void setTabSelectColor(int tabSelectColor) {
+        this.tabSelectColor = tabSelectColor;
+        invalidate();
+    }
+
+    public int getTabNormalColor() {
+        return tabNormalColor;
+    }
+
+    public void setTabNormalColor(int tabNormalColor) {
+        this.tabNormalColor = tabNormalColor;
+        invalidate();
+    }
+
+    public int getTabIndicatorWidth() {
+        return tabIndicatorWidth;
+    }
+
+    public void setTabIndicatorWidth(int tabIndicatorWidth) {
+        this.tabIndicatorWidth = tabIndicatorWidth;
+        invalidate();
+    }
+
+    public int getTabIndicatorHeight() {
+        return tabIndicatorHeight;
+    }
+
+    public void setTabIndicatorHeight(int tabIndicatorHeight) {
+        this.tabIndicatorHeight = tabIndicatorHeight;
+        invalidate();
+    }
+
+    public int getTabPaddingHorizontal() {
+        return tabPaddingHorizontal;
+    }
+
+    public void setTabPaddingHorizontal(int tabPaddingHorizontal) {
+        this.tabPaddingHorizontal = tabPaddingHorizontal;
+        invalidate();
+    }
+
+    public int getTabParentPaddingHorizontal() {
+        return tabParentPaddingHorizontal;
+    }
+
+    public void setTabParentPaddingHorizontal(int tabParentPaddingHorizontal) {
+        this.tabParentPaddingHorizontal = tabParentPaddingHorizontal;
+        invalidate();
     }
 }

@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.support.annotation.RequiresApi;
+import android.support.v4.view.NestedScrollingChildHelper;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.PagerAdapter;
@@ -132,6 +133,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         maxFlingVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
 
         nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
+        mNestedScrollingChildHelper = new NestedScrollingChildHelper(this);
         mScroller = new Scroller(context);
         flingRunnable = new FlingRunnable();
 
@@ -553,7 +555,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         headerView.setTranslationY(scrollDistance);
         scrollingViewParent.setTranslationY(scrollDistance);
         if (headerViewScrollListener != null) {
-            headerViewScrollListener.onOffsetChanged(Math.abs(scrollDistance), maxFlexibleHeight);
+            headerViewScrollListener.onOffsetChanged(scrollDistance, maxFlexibleHeight);
         }
         handleFlexibleView(scrollDistance);
         handleGradientView(scrollDistance, maxFlexibleHeight);
@@ -569,7 +571,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             View gradientView = wrapper.gradientView;
             int color = wrapper.gradientColor;
             gradientView.setBackgroundColor(color);
-            float alpha = (float)Math.abs(scrollDistance) / maxFlexibleHeight;
+            float alpha = (float) Math.abs(scrollDistance) / maxFlexibleHeight;
             gradientView.setTranslationY(scrollDistance);
             gradientView.setAlpha(alpha);
         }
@@ -592,6 +594,8 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         return false;
     }
 
+    private NestedScrollingChildHelper mNestedScrollingChildHelper;
+
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
         //向下滑时，currentScrollView 到top ,然后手动滑动头部。
@@ -599,7 +603,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             log("onNestedPreFling velocityY = " + velocityY);
             flingScrollingViewToTop((int) velocityY);
         }
-        return super.onNestedPreFling(target, velocityX, velocityY);
+        return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY);
     }
 
     private int previousY;
@@ -618,11 +622,11 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
             if (scrollDistance < 0) {
                 ViewCompat.postInvalidateOnAnimation(this);
 
-            }else{
+            } else {
                 mScroller.abortAnimation();
             }
 
-        }else{
+        } else {
             previousY = 0;
         }
     }
