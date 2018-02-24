@@ -28,10 +28,11 @@ public class MainActivity extends AppCompatActivity implements TabIndicator.OnTa
         setContentView(R.layout.activity_main);
 
         tabIndicator = findViewById(R.id.tab_indicator);
-        viewPager = findViewById(R.id.view_pager);
-        pagerAdapter = new TestPagerAdapter();
-        viewPager.setAdapter(pagerAdapter);
-        tabIndicator.setupWithViewPager(viewPager);
+        tabIndicator.setup(new String[]{"上报","督办","职能部门"});
+//        viewPager = findViewById(R.id.view_pager);
+//        pagerAdapter = new TestPagerAdapter();
+//        viewPager.setAdapter(pagerAdapter);
+//        tabIndicator.setupWithViewPager(viewPager);
 
 //        defaultTabAdapter = new DefaultTabAdapter();
 //        tabIndicator.setupWithTabAdapter(defaultTabAdapter);

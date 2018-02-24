@@ -12,6 +12,7 @@
         app:ti_select_color="@color/colorPrimary"
         android:textSize="14sp"
         app:ti_tab_mode="scroll"
+        app:ti_space="12dp"
         app:ti_tab_indicator_width="24dp"
         app:ti_indicator_mode="wrap"
         app:ti_tab_padding_horizontal="0dp"
