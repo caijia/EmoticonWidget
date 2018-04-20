@@ -400,6 +400,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         if (isInEditMode()) {
             return;
         }
+
         int childCount = tabContainer.getChildCount();
         for (int i = 0; i < childCount; i++) {
             View tabView = tabContainer.getChildAt(i);
@@ -423,6 +424,9 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     }
 
     private void drawIndicator(Canvas canvas) {
+        if (currentPosition >= tabContainer.getChildCount() || currentPosition < 0) {
+            return;
+        }
         View selectView = tabContainer.getChildAt(currentPosition);
         View nextView = tabContainer.getChildAt(currentPosition + 1);
         View selectTabView = selectView != null ? ((ViewGroup) selectView).getChildAt(0) : null;
@@ -460,7 +464,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
 
         if (customIndicator != null) {
             customIndicator.drawIndicator(canvas, indicatorPaint, selectView, nextView,
-                    selectTabView, nextTabView,currentPosition,positionOffset);
+                    selectTabView, nextTabView, currentPosition, positionOffset);
 
         } else {
             canvas.drawRect(indicatorLeft, height - tabIndicatorHeight,
@@ -470,96 +474,6 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
 
     public void setOnTabClickListener(OnTabClickListener tabClickListener) {
         this.tabClickListener = tabClickListener;
-    }
-
-    public interface OnTabClickListener {
-
-        void onTabClick(View view, int tabIndex);
-    }
-
-    public interface CustomTab {
-
-        View createTab(ViewGroup parent, int position);
-    }
-
-    public interface CustomIndicator {
-
-        void drawIndicator(@NonNull Canvas canvas, @NonNull Paint paint, @Nullable View selectView,
-                           @Nullable View nextView, @Nullable View selectChildView,
-                           @Nullable View nextChildView,int position,float positionOffset);
-    }
-
-    public static abstract class TabAdapter {
-        DataSetObserver observer;
-
-        public abstract int getCount();
-
-        public abstract View onCreateView(LayoutInflater inflater, ViewGroup parent, int position);
-
-        public void setDataSetObserver(DataSetObserver dataSetObserver) {
-            synchronized (this) {
-                this.observer = dataSetObserver;
-            }
-        }
-
-        public void notifyDataSetChanged() {
-            synchronized (this) {
-                if (observer != null) {
-                    observer.onChanged();
-                }
-            }
-        }
-    }
-
-    private class PagerAdapterObserver extends DataSetObserver {
-
-        @Override
-        public void onChanged() {
-            populateFromPagerAdapter();
-        }
-
-        @Override
-        public void onInvalidated() {
-            populateFromPagerAdapter();
-        }
-    }
-
-    private class AdapterChangeListener implements ViewPager.OnAdapterChangeListener {
-
-        @Override
-        public void onAdapterChanged(@NonNull ViewPager viewPager,
-                                     @Nullable PagerAdapter oldAdapter,
-                                     @Nullable PagerAdapter newAdapter) {
-            if (TabIndicator.this.viewPager == viewPager) {
-                populateFromPagerAdapter();
-            }
-        }
-    }
-
-    private class DefaultTabAdapter extends TabIndicator.TabAdapter {
-
-        String[] tabTitles;
-
-        public DefaultTabAdapter(String[] tabTitles) {
-            this.tabTitles = tabTitles;
-        }
-
-        @Override
-        public int getCount() {
-            return tabTitles.length;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup parent, int position) {
-            TextView tabView = new TextView(parent.getContext());
-            tabView.setText(tabTitles[position]);
-            tabView.setGravity(Gravity.CENTER);
-            tabView.setPadding(tabPaddingHorizontal, 0, tabPaddingHorizontal, 0);
-            tabView.setSingleLine();
-            tabView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
-            tabView.setTextColor(createColorStateList(tabNormalColor, tabSelectColor));
-            return tabView;
-        }
     }
 
     public LinearLayout getTabContainer() {
@@ -680,5 +594,118 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     public void setTabParentPaddingHorizontal(int tabParentPaddingHorizontal) {
         this.tabParentPaddingHorizontal = tabParentPaddingHorizontal;
         invalidate();
+    }
+
+    public void setCurrentItem(int position) {
+        this.currentPosition = this.selectedPosition = position;
+        if (viewPager != null) {
+            viewPager.setCurrentItem(position);
+
+        } else {
+            invalidate();
+        }
+
+        if (tabClickListener != null) {
+            tabClickListener.onTabClick(tabContainer.getChildAt(position), selectedPosition);
+        }
+    }
+
+    /**
+     * 设置不选中任何一个tab
+     */
+    public void setNoIndicator() {
+        this.currentPosition = -1;
+        this.selectedPosition = -1;
+        invalidate();
+    }
+
+    public interface OnTabClickListener {
+
+        void onTabClick(View view, int tabIndex);
+    }
+
+    public interface CustomTab {
+
+        View createTab(ViewGroup parent, int position);
+    }
+
+    public interface CustomIndicator {
+
+        void drawIndicator(@NonNull Canvas canvas, @NonNull Paint paint, @Nullable View selectView,
+                           @Nullable View nextView, @Nullable View selectChildView,
+                           @Nullable View nextChildView, int position, float positionOffset);
+    }
+
+    public static abstract class TabAdapter {
+        DataSetObserver observer;
+
+        public abstract int getCount();
+
+        public abstract View onCreateView(LayoutInflater inflater, ViewGroup parent, int position);
+
+        public void setDataSetObserver(DataSetObserver dataSetObserver) {
+            synchronized (this) {
+                this.observer = dataSetObserver;
+            }
+        }
+
+        public void notifyDataSetChanged() {
+            synchronized (this) {
+                if (observer != null) {
+                    observer.onChanged();
+                }
+            }
+        }
+    }
+
+    private class PagerAdapterObserver extends DataSetObserver {
+
+        @Override
+        public void onChanged() {
+            populateFromPagerAdapter();
+        }
+
+        @Override
+        public void onInvalidated() {
+            populateFromPagerAdapter();
+        }
+    }
+
+    private class AdapterChangeListener implements ViewPager.OnAdapterChangeListener {
+
+        @Override
+        public void onAdapterChanged(@NonNull ViewPager viewPager,
+                                     @Nullable PagerAdapter oldAdapter,
+                                     @Nullable PagerAdapter newAdapter) {
+            if (TabIndicator.this.viewPager == viewPager) {
+                populateFromPagerAdapter();
+            }
+        }
+    }
+
+    private class DefaultTabAdapter extends TabIndicator.TabAdapter {
+
+        String[] tabTitles;
+
+        public DefaultTabAdapter(String[] tabTitles) {
+            this.tabTitles = tabTitles;
+        }
+
+        @Override
+        public int getCount() {
+            return tabTitles.length;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup parent, int position) {
+            TextView tabView = new TextView(parent.getContext());
+            tabView.setText(tabTitles[position]);
+            tabView.setGravity(Gravity.CENTER);
+            tabView.setPadding(tabPaddingHorizontal, 0, tabPaddingHorizontal, 0);
+            tabView.setSingleLine();
+            tabView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
+            tabView.setTextColor(createColorStateList(tabNormalColor, tabSelectColor));
+            return tabView;
+        }
     }
 }
