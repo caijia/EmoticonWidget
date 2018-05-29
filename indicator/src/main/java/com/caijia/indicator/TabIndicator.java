@@ -80,6 +80,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
     private Paint dividerPaint;
     private Paint indicatorPaint;
     private LinearLayout.LayoutParams wrapTabWidthParams;
+    private LinearLayout.LayoutParams fillTabWidthParams;
     private LinearLayout.LayoutParams exactlyTabWidthParams;
     private LinearLayout.LayoutParams weightTabWidthParams;
     private ViewPager.OnAdapterChangeListener onAdapterChangeListener;
@@ -128,6 +129,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
         tabContainer = new LinearLayout(context);
         tabContainer.setOrientation(LinearLayout.HORIZONTAL);
         wrapTabWidthParams = new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT);
+        fillTabWidthParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         weightTabWidthParams = new LinearLayout.LayoutParams(0, MATCH_PARENT, 1f);
         addView(tabContainer, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
@@ -220,8 +222,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             tabParent.setGravity(Gravity.CENTER);
             LayoutInflater inflater = LayoutInflater.from(tabParent.getContext());
             View tabView = tabAdapter.onCreateView(inflater, tabParent, i);
-            wrapTabWidthParams.rightMargin = 0;
-            tabParent.addView(tabView, wrapTabWidthParams);
+            tabParent.addView(tabView);
 
             setSystemSelectableItemBackground(tabParent);
             tabParent.setPadding(tabParentPaddingHorizontal, 0, tabParentPaddingHorizontal, 0);
@@ -241,10 +242,15 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             LinearLayout.LayoutParams layoutParams = tabWidth != -1 ? exactlyTabWidthParams : (tabMode == MODE_SCROLL
                     ? wrapTabWidthParams
                     : weightTabWidthParams);
-            if (i >= 0 && i < count - 1) {
+            if (i < count - 1) {
                 layoutParams.rightMargin = tabSpace;
+                tabContainer.addView(tabParent, layoutParams);
             }
-            tabContainer.addView(tabParent, layoutParams);
+
+            if (i == count - 1) {
+                LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(layoutParams.width, layoutParams.height, layoutParams.weight);
+                tabContainer.addView(tabParent, p);
+            }
         }
     }
 
@@ -322,7 +328,7 @@ public class TabIndicator extends HorizontalScrollView implements ViewPager.OnPa
             }
 
             setSystemSelectableItemBackground(tabParent);
-            tabParent.addView(tabChild, WRAP_CONTENT, MATCH_PARENT);
+            tabParent.addView(tabChild);
             final int tabIndex = i;
             tabParent.setOnClickListener(new OnClickListener() {
                 @Override

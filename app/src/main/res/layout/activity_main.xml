@@ -9,16 +9,14 @@
         android:id="@+id/tab_indicator"
         android:layout_width="match_parent"
         android:layout_height="42dp"
-        app:ti_select_color="@color/colorPrimary"
         android:textSize="14sp"
-        app:ti_tab_mode="scroll"
+        app:ti_tab_mode="fixed"
         app:ti_space="12dp"
         app:ti_tab_indicator_width="24dp"
         app:ti_indicator_mode="wrap"
+        app:ti_tab_background="@drawable/selector_solid_229ef8_e5e5e5_r2"
         app:ti_tab_padding_horizontal="0dp"
-        app:ti_tab_parent_padding_horizontal="12dp"
-        app:ti_tab_indicator_color="@color/colorPrimary"
-        app:ti_tab_indicator_height="4dp" />
+        app:ti_tab_parent_padding_horizontal="12dp" />
 
     <android.support.v4.view.ViewPager
         android:id="@+id/view_pager"

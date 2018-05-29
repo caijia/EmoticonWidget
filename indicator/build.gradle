@@ -7,11 +7,11 @@ def gitUrl = 'https://github.com/caijia/EmoticonWidget.git'   // Git仓库的url
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-version = "1.0.7" //发布版本号
+version = "1.0.12" //发布版本号
 group = "com.caijia"
 android {
     compileSdkVersion 27
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion 15
@@ -31,12 +31,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    provided 'com.android.support:appcompat-v7:27.0.0'
-    testCompile 'junit:junit:4.12'
+    compileOnly 'com.android.support:appcompat-v7:27.1.1'
 }
 
 bintray {
@@ -52,10 +47,10 @@ bintray {
         publish = true // 是否是公开项目，公开别人可以引用
 
         version {
-            name = '1.0.7'
+            name = '1.0.12'
             desc = 'desc'//描述，自己定义
             released  = new Date()
-            vcsTag = 'v1.0.7'
+            vcsTag = 'v1.0.12'
             attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
         }
     }
