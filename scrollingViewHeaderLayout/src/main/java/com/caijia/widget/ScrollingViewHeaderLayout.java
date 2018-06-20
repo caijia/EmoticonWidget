@@ -26,7 +26,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.NestedScrollingChildHelper;
-import android.support.v4.view.NestedScrollingParent;
+import android.support.v4.view.NestedScrollingParent2;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ScrollingView;
@@ -58,14 +58,15 @@ import static android.support.v4.widget.ViewDragHelper.INVALID_POINTER;
  * Created by cai.jia on 2017/9/6 0006.
  */
 
-public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScrollingParent {
+public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScrollingParent2 {
 
     private static final String TAG = "viewPager_header_layout";
     private static final int SCROLL_MODE_SNAP = 1;
     private static final int SCROLL_MODE_NORMAL = 2;
     private View headerView;
     private View scrollingViewParent;
-    private NestedScrollingParentHelper nestedScrollingParentHelper;
+    private NestedScrollingParentHelper mNestedScrollingParentHelper;
+    private NestedScrollingChildHelper mNestedScrollingChildHelper;
     private int headVisibleMinHeight;
     private int scrollDistance;
     private int minFlingVelocity;
@@ -84,7 +85,6 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
      * 这里如果用{@link android.widget.OverScroller 在有些手机上} {@link OverScroller#getCurrVelocity()} 为0
      */
     private Scroller mScroller;
-    private FlingRunnable flingRunnable;
     private View currScrollingView;
     private OffsetChangeListener headerViewScrollListener;
     private int scrollMode;
@@ -132,10 +132,9 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         minFlingVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
         maxFlingVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
 
-        nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
+        mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
         mNestedScrollingChildHelper = new NestedScrollingChildHelper(this);
         mScroller = new Scroller(context);
-        flingRunnable = new FlingRunnable();
 
         flexibleViews = new ArrayList<>();
         gradientViews = new ArrayList<>();
@@ -325,6 +324,9 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
                 onMoveDown(ev);
                 currScrollingView = getCurrentScrollView();
                 maxFlexibleHeight = headerView.getMeasuredHeight() - headVisibleMinHeight;
+                if (!mScroller.isFinished()) {
+                    mScroller.abortAnimation();
+                }
                 break;
             }
 
@@ -377,7 +379,8 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         if (!isBeginDragged && yDis > touchSlop) {
             boolean isTop = scrollingViewIsTop();
             int remainingFlexibleHeight = getRemainingFlexibleHeight();
-            if ((remainingFlexibleHeight != 0 && dy < 0) || (isTop && dy > 0)) {
+            //dy < 0 上滑动
+            if ((remainingFlexibleHeight != 0 && dy < 0)) {
                 isBeginDragged = true;
             }
             log("isBeginDragged = " + isBeginDragged);
@@ -401,6 +404,9 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
                 onMoveDown(ev);
                 currScrollingView = getCurrentScrollView();
                 maxFlexibleHeight = headerView.getMeasuredHeight() - headVisibleMinHeight;
+                if (!mScroller.isFinished()) {
+                    mScroller.abortAnimation();
+                }
                 break;
             }
 
@@ -460,14 +466,11 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
                 }
                 computeVelocity();
                 int velocityY = (int) velocityTracker.getYVelocity(activePointerId);
-                //fling
-                log("touch fling velocityY = " + -velocityY);
-
                 if (velocityIsValid(velocityY)) {
-                    fling(-velocityY);
+                    flingTarget(-velocityY);
 
                 } else {
-                    flingOrTouchStop();
+                    snap();
                 }
                 activePointerId = INVALID_POINTER;
                 isBeginDragged = false;
@@ -484,53 +487,6 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
     private boolean velocityIsValid(int velocity) {
         int absVelocity = Math.abs(velocity);
         return absVelocity > minFlingVelocity && absVelocity < maxFlingVelocity;
-    }
-
-    @Override
-    public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
-    }
-
-    @Override
-    public void onNestedScrollAccepted(View child, View target, int nestedScrollAxes) {
-
-    }
-
-    @Override
-    public void onStopNestedScroll(View target) {
-
-    }
-
-    @Override
-    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-
-    }
-
-    @Override
-    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        boolean isTop = scrollingViewIsTop();
-        if (isTop) {
-            //可以向上滚动的距离 dy>0表示向上滚动
-            int remainingFlexibleHeight = getRemainingFlexibleHeight();
-            if (dy > 0 && remainingFlexibleHeight > 0) {
-                if (dy > remainingFlexibleHeight) {
-                    consumed[1] = remainingFlexibleHeight;
-                } else {
-                    consumed[1] = dy;
-                }
-                translateChild(-consumed[1]);
-
-            } else if (dy < 0 && remainingFlexibleHeight < maxFlexibleHeight) {
-                log("pre scroll down");
-                if (dy > maxFlexibleHeight - remainingFlexibleHeight) {
-                    consumed[1] = maxFlexibleHeight - remainingFlexibleHeight;
-
-                } else {
-                    consumed[1] = dy;
-                }
-                translateChild(-consumed[1]);
-            }
-        }
     }
 
     /**
@@ -589,85 +545,6 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         }
     }
 
-    @Override
-    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
-        return false;
-    }
-
-    private NestedScrollingChildHelper mNestedScrollingChildHelper;
-
-    @Override
-    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        //向下滑时，currentScrollView 到top ,然后手动滑动头部。
-        if (isSeriesScroll && velocityY < 0) {
-            log("onNestedPreFling velocityY = " + velocityY);
-            flingScrollingViewToTop((int) velocityY);
-        }
-        return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY);
-    }
-
-    private int previousY;
-
-    @Override
-    public void computeScroll() {
-        super.computeScroll();
-        if (mScroller != null && mScroller.computeScrollOffset()) {
-            int currY = mScroller.getCurrY();
-            int dy = currY - previousY;
-            if (scrollingViewIsTop()) {
-                log("computeScroll dy = " + dy);
-                translateChild(-dy);
-            }
-            previousY = currY;
-            if (scrollDistance < 0) {
-                ViewCompat.postInvalidateOnAnimation(this);
-
-            } else {
-                mScroller.abortAnimation();
-            }
-
-        } else {
-            previousY = 0;
-        }
-    }
-
-    private void fling(int velocityY) {
-        if (!mScroller.isFinished()) {
-            log("fling is not finish");
-            return;
-        }
-
-        mScroller.fling(
-                0, 0, //init value
-                0, velocityY, //velocity
-                0, 0, // x
-                Integer.MIN_VALUE, Integer.MAX_VALUE); //y
-        if (mScroller.computeScrollOffset()) {
-            flingRunnable.setDirection(velocityY > 0 ? FlingRunnable.UP : FlingRunnable.DOWN);
-            ViewCompat.postOnAnimation(this, flingRunnable);
-        }
-    }
-
-    /**
-     * ScrollingView滑动到顶部,然后在惯性滑动头部
-     *
-     * @param velocityY
-     */
-    private void flingScrollingViewToTop(int velocityY) {
-        if (!mScroller.isFinished()) {
-            return;
-        }
-
-        mScroller.fling(
-                0, 0, //init value
-                0, velocityY, //velocity
-                0, 0, // x
-                Integer.MIN_VALUE, Integer.MAX_VALUE); //y
-        if (mScroller.computeScrollOffset()) {
-            ViewCompat.postInvalidateOnAnimation(this);
-        }
-    }
-
     private void flingTarget(int currVelocity) {
         final View targetView = currScrollingView;
         if (targetView == null) {
@@ -699,11 +576,6 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         }
     }
 
-    @Override
-    public int getNestedScrollAxes() {
-        return nestedScrollingParentHelper.getNestedScrollAxes();
-    }
-
     public void setOnHeaderViewScrollListener(OffsetChangeListener listener) {
         this.headerViewScrollListener = listener;
     }
@@ -718,7 +590,7 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         }
     }
 
-    private void flingOrTouchStop() {
+    private void snap() {
         if (scrollMode == SCROLL_MODE_SNAP) {
             boolean up = Math.abs(scrollDistance) > maxFlexibleHeight * 0.5f;
             animTranslate(0, (up ? maxFlexibleHeight : 0) - Math.abs(scrollDistance));
@@ -865,64 +737,105 @@ public class ScrollingViewHeaderLayout extends FrameLayout implements NestedScro
         }
     }
 
-    private class FlingRunnable implements Runnable {
 
-        static final int DOWN = 1;
-        static final int UP = -1;
-        private int direction;
 
-        private int oldCurrY;
+    /***********************NestedScrollingChild2************************/
 
-        void setDirection(int direction) {
-            this.direction = direction;
+    @Override
+    public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes, int type) {
+        return (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+    }
+
+    @Override
+    public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes, int type) {
+
+    }
+
+    @Override
+    public void onStopNestedScroll(@NonNull View target, int type) {
+
+    }
+
+    @Override
+    public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+        log(String.format("onNestedScroll dyConsumed = %d,dyUnconsumed = %d",dyConsumed,dyUnconsumed));
+    }
+
+    @Override
+    public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
+        if (consumed == null) {
+            return;
         }
 
-        private void reset() {
-            oldCurrY = 0;
-        }
+        log(String.format("onNestedPreScroll dy = %d,",dy));
 
-        @Override
-        public void run() {
-            if (mScroller.computeScrollOffset()) {
-                int currY = mScroller.getCurrY();
-                log("currY = " + currY);
-                int dy = oldCurrY - currY;
-                translateChild(dy);
-                oldCurrY = currY;
-                switch (direction) {
-                    case UP: {
-                        boolean toTop = scrollDistance <= -maxFlexibleHeight;
-                        if (toTop) {
-                            reset();
-                            int currVelocity = (int) mScroller.getCurrVelocity();
-                            log("fling up currVelocity " + currVelocity);
-                            mScroller.abortAnimation();
-                            flingTarget(currVelocity);
-
-                        } else {
-                            ViewCompat.postOnAnimation(ScrollingViewHeaderLayout.this, this);
-                        }
-                        break;
-                    }
-
-                    case DOWN: {
-                        boolean toBottom = scrollDistance >= 0;
-                        if (toBottom) {
-                            reset();
-                            mScroller.abortAnimation();
-
-                        } else {
-                            ViewCompat.postOnAnimation(ScrollingViewHeaderLayout.this, this);
-                        }
-                        break;
-                    }
+        boolean isTop = scrollingViewIsTop();
+        if (isTop) {
+            //可以向上滚动的距离 dy>0表示向上滚动
+            int remainingFlexibleHeight = getRemainingFlexibleHeight();
+            if (dy > 0 && remainingFlexibleHeight > 0) {
+                if (dy > remainingFlexibleHeight) {
+                    consumed[1] = remainingFlexibleHeight;
+                } else {
+                    consumed[1] = dy;
                 }
+                translateChild(-consumed[1]);
 
-            } else {
-                reset();
-                flingOrTouchStop();
-                log("fling stop");
+            } else if (dy < 0 && remainingFlexibleHeight < maxFlexibleHeight) {
+                if (dy > maxFlexibleHeight - remainingFlexibleHeight) {
+                    consumed[1] = maxFlexibleHeight - remainingFlexibleHeight;
+
+                } else {
+                    consumed[1] = dy;
+                }
+                translateChild(-consumed[1]);
             }
         }
+    }
+
+    /***********************NestedScrollingChild************************/
+
+    @Override
+    public int getNestedScrollAxes() {
+        return mNestedScrollingParentHelper.getNestedScrollAxes();
+    }
+
+    @Override
+    public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int nestedScrollAxes) {
+        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+    }
+
+    @Override
+    public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int nestedScrollAxes) {
+
+    }
+
+    @Override
+    public void onStopNestedScroll(@NonNull View target) {
+
+    }
+
+    @Override
+    public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+
+    }
+
+    @Override
+    public void onNestedPreScroll(@NonNull View target, int dx, int dy, @NonNull int[] consumed) {
+    }
+
+    @Override
+    public boolean onNestedFling(@NonNull View target, float velocityX, float velocityY, boolean consumed) {
+        return mNestedScrollingChildHelper.dispatchNestedFling(velocityX , velocityY,consumed);
+    }
+
+    @Override
+    public boolean onNestedPreFling(@NonNull View target, float velocityX, float velocityY) {
+        //向下滑时，currentScrollView 到top ,然后手动滑动头部。
+//        if (isSeriesScroll && velocityY < 0) {
+//            log("onNestedPreFling velocityY = " + velocityY);
+//            flingScrollingViewToTop((int) velocityY);
+//        }
+        return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY);
     }
 }

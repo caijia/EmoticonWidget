@@ -8,6 +8,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.caijia.indicator.TabIndicator;
 import com.caijia.widget.ScrollingViewHeaderLayout;
@@ -25,23 +27,40 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
     private ViewPager viewPager;
     private TabIndicator tabIndicator;
     private List<Fragment> fragments;
+    private ImageView imageView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_view_pager_header);
-        viewPager = (ViewPager) findViewById(R.id.view_pager);
-        tabIndicator = (TabIndicator) findViewById(R.id.tab_indicator);
-        scrollingViewHeaderLayout = (ScrollingViewHeaderLayout) findViewById(R.id.view_pager_header_layout);
+        viewPager = findViewById(R.id.view_pager);
+        tabIndicator = findViewById(R.id.tab_indicator);
+        imageView = findViewById(R.id.image_view);
+        scrollingViewHeaderLayout = findViewById(R.id.view_pager_header_layout);
         scrollingViewHeaderLayout.setDebug(true);
+
+        tabIndicator.post(new Runnable() {
+            @Override
+            public void run() {
+                int height = tabIndicator.getHeight();
+                scrollingViewHeaderLayout.setHeadVisibleMinHeight(height);
+            }
+        });
+
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(v.getContext(), "click image", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         fragments = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             if (i == 1) {
                 fragments.add(new TestRecyclerFragment());
-            }else if (i==2){
+            } else if (i == 2) {
                 fragments.add(new TestFragment1());
-            }else{
+            } else {
                 fragments.add(new TestFragment());
             }
         }
@@ -56,7 +75,7 @@ public class ViewPagerHeaderAct extends AppCompatActivity {
         });
     }
 
-    private class MyPagerAdapter extends CacheFagmentAdapter implements ScrollingViewHeaderLayout.CurrentViewProvider{
+    private class MyPagerAdapter extends CacheFagmentAdapter implements ScrollingViewHeaderLayout.CurrentViewProvider {
 
         public MyPagerAdapter(FragmentManager fm) {
             super(fm);

@@ -4,27 +4,27 @@
     android:layout_height="match_parent"
     android:id="@+id/view_pager_header_layout"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:headVisibleMinHeight="40dp"
     app:isSeriesScroll="true"
     android:orientation="vertical">
 
     <ImageView
+        android:id="@+id/image_view"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="340dp"
         android:scaleType="centerCrop"
         android:src="@drawable/example"
         app:isFlexibleLayout="true"
-        app:flexibleRatio="0.5"/>
+        app:flexibleRatio="1"/>
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="240dp"
-        app:isGradientLayout="true"
+        android:layout_height="340dp"
+        app:isGradientLayout="false"
         app:gradientColor="@color/colorAccent"/>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="340dp"
         android:orientation="vertical"
         app:isHeaderLayout="true">
 
